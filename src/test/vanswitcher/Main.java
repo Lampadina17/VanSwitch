@@ -36,13 +36,13 @@ public class Main {
         // second case: automatically stop services until game is closed
         switch (args.length) {
             case 0:
-                if (isVanguardRunning()) {
+                if (Utils.isVanguardRunning()) {
                     System.out.println("[INFO] Vanguard is Enabled, you can play Valorant");
                     // make variables
                     boolean found = false, opened = false;
                     // run until game is closed
                     while (true) {
-                        if (isGameRunning()) {
+                        if (Utils.isGameRunning()) {
                             found = opened = true;
                         }
                         // if the game is closed disables Vanguard
@@ -71,33 +71,7 @@ public class Main {
         }
     }
 
-    static boolean isGameRunning() throws IOException {
-        String task;
-        Process p = Runtime.getRuntime().exec(System.getenv("windir") + "\\system32\\" + "tasklist.exe");
-        BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        while ((task = input.readLine()) != null) {
-            if (task.startsWith("VALORANT.exe")) {
-                return true;
-            }
-        }
-        input.close();
-        return false;
-    }
 
-    static boolean isVanguardRunning() throws IOException {
-        String task;
-        Process p = Runtime.getRuntime().exec("sc query vgk");
-        BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        while ((task = input.readLine()) != null) {
-            if (task.contains("RUNNING")) {
-                return true;
-            } else if (task.contains("STOPPED")) {
-                return false;
-            }
-        }
-        input.close();
-        return false;
-    }
 
     static void EnableVanguard() throws IOException {
         Runtime run = Runtime.getRuntime();
