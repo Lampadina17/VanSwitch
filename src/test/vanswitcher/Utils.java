@@ -1,62 +1,42 @@
 package test.vanswitcher;
 
-import java.io.*;
-import java.util.prefs.Preferences;
-
-import static java.lang.System.setErr;
-import static java.util.prefs.Preferences.systemRoot;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class Utils {
 
-    // this perform admin check
-    // Code taken from StackOverflow
-    public static boolean isAdmin() {
-        Preferences preferences = systemRoot();
-        synchronized (System.err) {
-            setErr(new PrintStream(new OutputStream() {
-                @Override
-                public void write(int b) {
-                }
-            }));
-
-            try {
-                preferences.put("foo", "bar"); // SecurityException on Windows
-                preferences.remove("foo");
-                preferences.flush(); // BackingStoreException on Linux
-                return true;
-            } catch (Exception exception) {
-                return false;
-            } finally {
-                setErr(System.err);
-            }
-        }
-    }
-
-    static boolean isGameRunning() throws IOException {
+    public boolean isGameRunning() {
         String task;
-        Process p = Runtime.getRuntime().exec(System.getenv("windir") + "\\system32\\" + "tasklist.exe");
-        BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        while ((task = input.readLine()) != null) {
-            if (task.startsWith("VALORANT.exe")) {
-                return true;
+        try {
+            Process p = Runtime.getRuntime().exec(System.getenv("windir") + "\\system32\\tasklist.exe");
+            BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            while ((task = input.readLine()) != null) {
+                if (task.startsWith("VALORANT.exe"))
+                    return true;
             }
+            input.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        input.close();
         return false;
     }
 
-    static boolean isVanguardRunning() throws IOException {
+    public boolean isVanguardRunning() {
         String task;
-        Process p = Runtime.getRuntime().exec("sc query vgk");
-        BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        while ((task = input.readLine()) != null) {
-            if (task.contains("RUNNING")) {
-                return true;
-            } else if (task.contains("STOPPED")) {
-                return false;
+        try {
+            Process p = Runtime.getRuntime().exec("sc query vgk");
+            BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            while ((task = input.readLine()) != null) {
+                if (task.contains("RUNNING"))
+                    return true;
+                else if (task.contains("STOPPED"))
+                    return false;
             }
+            input.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        input.close();
         return false;
     }
 }

@@ -1,91 +1,79 @@
 package test.vanswitcher;
 
-import test.vanswitcher.Secret.IlIlIlIllIlIlIlIlIllIl;
+import org.apache.commons.cli.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
 
-    // This program is made for helping people, please respect my work and do not change this essay
-    static {
-        String text = "°•Ž““‚‰Ç…žÇ«†Š—†ƒŽ‰†¸ÖÐ";
+    static Logger logger = Logger.getLogger(Main.class.getName());
+
+    public static void main(String[] args) {
+        Utils util = new Utils();
+        if (!WindowsAdminUtil.isUserWindowsAdmin()) {
+            logger.log(Level.SEVERE, "This program requires Administrator privileges");
+            System.exit(1);
+        }
+        // Parse Argument
+        Options options = new Options();
+        Option play = new Option("p", "play", false, "launch the game");
+        play.setRequired(false);
+        options.addOption(play);
+
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = null;
         try {
-            if (!IlIlIlIllIlIlIlIlIllIl.IllllIlIlIlI(text).equals("596ddd247318a49dc0889733c7ac776fa8624e2665add16fe04cc781136c6fcc")) {
-                System.out.println(new String(IlIlIlIllIlIlIlIlIllIl.IllIlIlIllIl("Œ§¦¼è»¼\u00AD©¤è¥±è¿§º£äè‡º¡¯¡¦©¤òè ¼¼¸»òçç¯¡¼ ½ªæ«§¥ç„©¥¸©¬¡¦©ùÿçž©¦›¼§¸", 200)));
-                System.exit(0);
-            }
-        } catch (Exception e) {
+            cmd = parser.parse(options, args);
+        } catch (ParseException e) {
             e.printStackTrace();
         }
-        System.out.println(new String(IlIlIlIllIlIlIlIlIllIl.IllIlIlIllIl(text, 999)));
-    }
 
-    // Entry point of the program
-    public static void main(String[] args) throws IOException {
-        // Determine if the programs run as administrator, if not exit
-        if (!Utils.isAdmin()) {
-            System.out.println("---------------------------------------------------------------------------------------------------");
-            System.out.println("To Work this must run as Administrator!");
-            System.out.println("PS: dont worry if print error, this is for detect if this runs as admin :)");
-            System.out.println("---------------------------------------------------------------------------------------------------");
-            System.exit(0);
-        }
-        // first case: manually start services.
-        // second case: automatically stop services until game is closed
-        switch (args.length) {
-            case 0:
-                if (Utils.isVanguardRunning()) {
-                    System.out.println("[INFO] Vanguard is Enabled, you can play Valorant");
-                    // make variables
-                    boolean found = false, opened = false;
-                    // run until game is closed
-                    while (true) {
-                        if (Utils.isGameRunning()) {
-                            found = opened = true;
-                        }
-                        // if the game is closed disables Vanguard
-                        if (!found && opened) {
-                            System.out.println("[INFO] Vanguard being Disabled (Game closed)");
-                            DisableVanguard();
-                            break;
-                        }
-                        found = false;
+        if (cmd.hasOption("p")) { // -p or -play
+            if (util.isVanguardRunning()) {
+                logger.log(Level.INFO, "Vanguard is Enabled, you can play Valorant");
+                // make variables
+                boolean found = false, opened = false;
+                // run until game is closed
+                while (true) {
+                    if (util.isGameRunning()) {
+                        found = opened = true;
                     }
-                } else {
-                    System.out.println("[INFO] Vanguard is Disabled, use -StartGame to enable");
+                    // if the game is closed disables Vanguard
+                    if (!found && opened) {
+                        logger.log(Level.INFO, "Vanguard being Disabled (Game closed)");
+                        disableVan();
+                        break;
+                    }
+                    found = false;
                 }
-                break;
-            case 1:
-                if (args[0].equals("-StartGame")) {
-                    System.out.println("[INFO] Vanguard being Enabled, your system will rebooted");
-                    EnableVanguard();
-                } else {
-                    System.out.println("[ERROR] Invalid argument. use -StartGame");
-                }
-                break;
-            default:
-                System.out.println("[ERROR] Too many arguments");
-                break;
+            } else {
+                logger.log(Level.INFO, "Vanguard is Disabled");
+            }
+        } else {
+            logger.log(Level.INFO, "Vanguard being Enabled, your system will restarted");
+            enableVan();
         }
     }
 
-
-
-    static void EnableVanguard() throws IOException {
+    private static void disableVan() {
         Runtime run = Runtime.getRuntime();
-        run.exec("sc config vgk start= system"); // enable vgk startup
-        run.exec("sc config vgc start= demand"); // enable vgc startup
-        run.exec("shutdown /r /f /t 1"); // reboot the machine
+        // disable vgk, disable vgc, stop vgk, stop vgc, stop vgtray
+        try {
+            run.exec("sc config vgk start= disabled && sc config vgc start= disabled && net stop vgk && net stop vgc && taskkill /IM vgtray.exe");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    static void DisableVanguard() throws IOException {
+    private static void enableVan() {
         Runtime run = Runtime.getRuntime();
-        run.exec("sc config vgk start= disabled"); // disable vgk startup
-        run.exec("sc config vgc start= disabled"); // disable vgc startup
-        run.exec("net stop vgk"); // kill vgk
-        run.exec("net stop vgc"); // kill vgc
-        run.exec("taskkill /IM vgtray.exe"); // exit tray
+        // enable vgk && enable vgc && reboot system
+        try {
+            run.exec("sc config vgk start= system && sc config vgc start= demand && shutdown /r /f /t 1");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
