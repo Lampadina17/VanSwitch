@@ -61,7 +61,11 @@ public class Main {
         Runtime run = Runtime.getRuntime();
         // disable vgk, disable vgc, stop vgk, stop vgc, stop vgtray
         try {
-            run.exec("sc config vgk start= disabled && sc config vgc start= disabled && net stop vgk && net stop vgc && taskkill /IM vgtray.exe");
+            run.exec("sc config vgk start= disabled");
+            run.exec("sc config vgc start= disabled");
+            run.exec("net stop vgk");
+            run.exec("net stop vgc");
+            run.exec("taskkill /IM vgtray.exe");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,7 +75,9 @@ public class Main {
         Runtime run = Runtime.getRuntime();
         // enable vgk && enable vgc && reboot system
         try {
-            run.exec("sc config vgk start= system && sc config vgc start= demand && shutdown /r /f /t 1");
+            run.exec("sc config vgk start= system");
+            run.exec("sc config vgc start= demand");
+            run.exec("shutdown /r /f /t 1");
         } catch (IOException e) {
             e.printStackTrace();
         }
